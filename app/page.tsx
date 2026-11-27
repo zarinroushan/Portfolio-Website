@@ -1,307 +1,497 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Github,
-  Linkedin,
-  Mail,
-  MoveUpRight,
-  Sparkles,
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+
+const sections = ["projects", "about", "journey", "learning", "contact"];
 
 const projects = [
   {
     number: "01",
     name: "UniGigs",
-    type: "PRODUCT · FULL-STACK",
+    type: "STUDENT FREELANCE MARKETPLACE",
     description:
-      "A student freelance marketplace designed to connect campus talent with real opportunities.",
-    stack: ["Next.js", "TypeScript", "PostgreSQL"],
-    href: "https://github.com/zarinroushan/freelance-hub",
-    tone: "project-lilac",
-    mark: "UG",
+      "A platform designed to connect students with freelance opportunities and help them find ways to put their skills into practice.",
+    stack: "Full-stack Development",
+    status: "FEATURED PROJECT",
   },
   {
     number: "02",
-    name: "Pip’s Midnight Observatory",
-    type: "INTERACTIVE · CREATIVE TECH",
+    name: "ClutchVision",
+    type: "IPL CRICKET ANALYTICS",
     description:
-      "A tiny, magical world built around interactive storytelling and playful exploration.",
-    stack: ["JavaScript", "Animation", "Creative UI"],
-    href: "https://github.com/zarinroushan/pips-midnight-observatory",
-    tone: "project-peach",
-    mark: "✳",
+      "A cricket analytics project exploring IPL data, match insights and ways to make sports statistics more interactive.",
+    stack: "Data Analytics · Visualisation",
+    status: "FEATURED PROJECT",
   },
   {
     number: "03",
-    name: "NammaSpeak",
-    type: "LANGUAGE · AI",
+    name: "Campus Energy Consumption Analytics",
+    type: "DATA ANALYTICS",
     description:
-      "A travel-focused Kannada learning experience, with practical conversations and offline-first support.",
-    stack: ["JavaScript", "Flask", "Gemini"],
-    href: "https://github.com/zarinroushan",
-    tone: "project-mint",
-    mark: "ನ",
-  },
-  {
-    number: "04",
-    name: "ClutchVision",
-    type: "DATA · SPORTS ANALYTICS",
-    description:
-      "An IPL cricket analytics project exploring match data through useful visual insights.",
-    stack: ["Python", "Data Analysis", "Visualization"],
-    href: "https://github.com/zarinroushan/clutchvision",
-    tone: "project-yellow",
-    mark: "CV",
+      "An analysis of campus energy consumption data, exploring patterns and insights through data analysis and visualisation.",
+    stack: "R · Data Analytics",
+    status: "FEATURED PROJECT",
   },
 ];
 
-const navItems = [
-  ["01", "Work", "#work"],
-  ["02", "About", "#about"],
-  ["03", "Contact", "#contact"],
-] as const;
-
 export default function Home() {
-  const [time, setTime] = useState("");
-  const [terminalOpen, setTerminalOpen] = useState(false);
-  const [activeKey, setActiveKey] = useState("");
+  const [exploring, setExploring] = useState(false);
+  const [activeSection, setActiveSection] = useState(0);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
-    const updateTime = () =>
-      setTime(
-        new Intl.DateTimeFormat("en-IN", {
-          timeZone: "Asia/Kolkata",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }).format(new Date()),
-      );
-    updateTime();
-    const interval = window.setInterval(updateTime, 30_000);
-    return () => window.clearInterval(interval);
+    const savedTheme = window.localStorage.getItem("zarin-world-theme");
+    const initialTheme = savedTheme === "light" ? "light" : "dark";
+    setTheme(initialTheme);
+    document.documentElement.dataset.theme = initialTheme;
   }, []);
 
+  const toggleTheme = useCallback(() => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem("zarin-world-theme", nextTheme);
+  }, [theme]);
+
+  const goToSection = useCallback((index: number) => {
+    const safeIndex = Math.max(0, Math.min(index, sections.length - 1));
+    const target = document.getElementById(sections[safeIndex]);
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth";
+
+    target?.scrollIntoView({
+      behavior,
+      block: "start",
+    });
+
+    setActiveSection(safeIndex);
+    window.history.replaceState(null, "", `#${sections[safeIndex]}`);
+  }, []);
+
+  const startExploring = useCallback(() => {
+    if (exploring) return;
+
+    setExploring(true);
+    setActiveSection(0);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById("projects")?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+        window.history.replaceState(null, "", "#projects");
+      });
+    });
+  }, [exploring]);
+
+  const returnHome = useCallback(() => {
+    setExploring(false);
+    setActiveSection(0);
+    window.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search
+    );
+  }, []);
+
+  // Lock scrolling until the visitor chooses to explore.
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === "INPUT" ||
-        event.key === "TEXTAREA" ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey
-      ) return;
+    document.body.style.overflow = exploring ? "auto" : "hidden";
 
-      const key = event.key.toLowerCase();
-      const routes: Record<string, string> = {
-        h: "#home",
-        w: "#work",
-        a: "#about",
-        c: "#contact",
-      };
-
-      if (routes[key]) {
-        setActiveKey(key);
-        document.querySelector(routes[key])?.scrollIntoView({ behavior: "smooth" });
-      }
-      if (key === "escape") setTerminalOpen(false);
-      if (key === "?") setTerminalOpen((open) => !open);
+    return () => {
+      document.body.style.overflow = "auto";
     };
+  }, [exploring]);
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  // Keyboard navigation.
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const key = event.key.toLowerCase();
+
+      if (!exploring && key === "enter") {
+        event.preventDefault();
+        startExploring();
+        return;
+      }
+
+      if (!exploring) return;
+
+      if (key === "escape" || key === "home") {
+        event.preventDefault();
+        returnHome();
+      }
+
+      if (key === "pageup") {
+        event.preventDefault();
+        goToSection(activeSection - 1);
+      }
+
+      if (key === "pagedown") {
+        event.preventDefault();
+        goToSection(activeSection + 1);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [exploring, activeSection, startExploring, returnHome, goToSection]);
+
+  // Update the active section while scrolling.
+  useEffect(() => {
+    if (!exploring) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = sections.indexOf(entry.target.id);
+            if (index !== -1) {
+              setActiveSection(index);
+              window.history.replaceState(null, "", `#${entry.target.id}`);
+            }
+          }
+        });
+      },
+      { threshold: 0.45 }
+    );
+
+    sections.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [exploring]);
 
   return (
-    <main id="home">
-      <div className="grain" aria-hidden="true" />
-      <header className="site-header">
-        <a className="wordmark" href="#home" aria-label="Zarin home">
-          zarin<span className="wordmark-dot">.</span>world
-        </a>
-        <nav className="desktop-nav" aria-label="Main navigation">
-          {navItems.map(([number, label, href]) => (
-            <a href={href} key={label}>
-              <span>{number}</span>{label}
-            </a>
-          ))}
-        </nav>
+    <main className={`world ${exploring ? "is-exploring" : "is-home"}`}>
+      <div className="botanical-frame" aria-hidden="true">
+        <img className="botanical-branch botanical-branch-left" src="/assets/botanical/vine-left.png" alt="" />
+        <img className="botanical-branch botanical-branch-right" src="/assets/botanical/vine-right.png" alt="" />
+      </div>
+      <div className="scanlines" aria-hidden="true" />
+
+      <header className="top-bar">
+        <button className="logo" onClick={returnHome} aria-label="Return home">
+          zarin<span>.world</span>
+        </button>
+
         <button
-          className="availability"
-          onClick={() => document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" })}
+          className="theme-toggle"
+          type="button"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
         >
-          <span className="availability-dot" /> AVAILABLE FOR OPPORTUNITIES
+          <span aria-hidden="true">{theme === "dark" ? "☼" : "◐"}</span>
+          {theme === "dark" ? "LIGHT MODE" : "DARK MODE"}
         </button>
       </header>
 
-      <section className="hero section-shell">
-        <div className="hero-meta">
-          <span>INDEPENDENT CREATOR / DEVELOPER</span>
-          <span>KOLKATA, IN <i>—</i> {time || "••:••"} IST</span>
-        </div>
+      {/* LANDING SCREEN */}
+      <section id="home" className="hero-section">
+        <div className="hero-content">
+          <div className="hero-text">
 
-        <div className="hero-copy">
-          <motion.p
-            className="eyebrow"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Sparkles size={14} /> HELLO, INTERNET. I’M ZARIN.
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, delay: 0.08 }}
-          >
-            I make the
-            <br />
-            <span className="serif-word">digital</span> feel
-            <br />
-            a little more <span className="outlined-word">human.</span>
-          </motion.h1>
-          <motion.div
-            className="hero-bottom"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.35 }}
-          >
-            <p>
-              I’m a computer science student who loves turning curious ideas into
-              thoughtful interfaces, useful products, and interactive experiences.
+            <h1>
+              Hi! I am <span>Zarin.</span>
+            </h1>
+
+            <p className="intro-description">
+              A curious mind building things for the digital world.
             </p>
-            <a className="round-link" href="#work" aria-label="Explore selected work">
-              <ArrowDownRight size={23} />
-            </a>
-          </motion.div>
+
+            <p className="terminal-message">
+              <span>&gt;</span> PRESS ENTER TO EXPLORE
+              <span className="cursor">_</span>
+            </p>
+
+            <p className="hero-hint">or CLICK TO EXPLORE ⤵</p>
+
+            <button className="explore-button" onClick={startExploring}>
+              EXPLORE MY WORLD <span>→</span>
+            </button>
+          </div>
+
+          <div className="ascii-portrait">
+            <img
+              src="/assets/portrait/zarin-ascii-preview.png"
+              alt="ASCII art portrait of Zarin"
+            />
+          </div>
         </div>
 
-        <div className="hero-sticker" aria-label="Curiosity is a feature">
-          <span className="sticker-star">✳</span>
-          <span>CURIOUS BY<br />DEFAULT</span>
-          <span className="sticker-small">MADE OF CURIOSITY</span>
+        {/* PIXEL ART ENVIRONMENT */}
+        <div className="forest-edge" aria-hidden="true">
+          <img
+            className="environment-tree"
+            src="/assets/environment/tree.png"
+            alt=""
+          />
+          <img
+            className="environment-grass"
+            src="/assets/environment/grass-platform.png"
+            alt=""
+          />
+          <img
+            className="environment-flower"
+            src="/assets/environment/flower.png"
+            alt=""
+          />
         </div>
 
-        <div className="hero-footer">
-          <span>SCROLL A LITTLE. STAY A WHILE.</span>
-          <button onClick={() => setTerminalOpen(true)} className="hint-button">
-            <span>PRESS</span> <kbd>?</kbd> <span>FOR SHORTCUTS</span>
-          </button>
-          <span>© 2026 ZARIN ROUSHAN</span>
-        </div>
       </section>
 
-      <section className="work-section section-shell" id="work">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">A FEW THINGS I’VE MADE</p>
-            <h2>Selected <span className="serif-word">work.</span></h2>
-          </div>
-          <p className="section-aside">A mix of useful, curious<br />and slightly unusual things.</p>
-        </div>
-
-        <div className="project-grid">
-          {projects.map((project, index) => (
-            <motion.a
-              className="project-card"
-              href={project.href}
-              target="_blank"
-              rel="noreferrer"
-              key={project.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: index * 0.08 }}
+      {/* EVERYTHING BELOW THIS POINT APPEARS AFTER EXPLORING */}
+      {exploring && (
+        <>
+          <nav className="world-nav" aria-label="World navigation">
+            <button onClick={returnHome}>← HOME</button>
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             >
-              <div className={`project-art ${project.tone}`}>
-                <span className="project-index">/{project.number}</span>
-                <span className="project-mark">{project.mark}</span>
-                <span className="project-open"><MoveUpRight size={18} /></span>
-                <span className="art-caption">AN EXPLORATION IN MAKING</span>
+              <span aria-hidden="true">{theme === "dark" ? "☼" : "◐"}</span>
+              {theme === "dark" ? "LIGHT MODE" : "DARK MODE"}
+            </button>
+          </nav>
+
+          {/* PROJECTS */}
+          <section id="projects" className="content-section">
+            <div className="section-inner">
+              <p className="section-label">01 / THINGS I&apos;VE BUILT</p>
+              <h2>
+                Selected projects<span>.</span>
+              </h2>
+              <p className="section-intro">
+                A few things I&apos;ve worked on, explored and brought to life.
+              </p>
+
+              <div className="project-grid">
+                {projects.map((project) => (
+                  <article className="project-card" key={project.name}>
+                    <div className="project-card-top">
+                      <span className="project-number">{project.number}</span>
+                      <span className="project-status">{project.status}</span>
+                    </div>
+
+                    <p className="project-type">{project.type}</p>
+                    <h3>{project.name}</h3>
+                    <p className="project-description">
+                      {project.description}
+                    </p>
+                    <span className="project-stack">{project.stack}</span>
+                  </article>
+                ))}
               </div>
-              <div className="project-info">
-                <div className="project-type">{project.type}</div>
-                <h3>{project.name}</h3>
-                <p>{project.description}</p>
-                <div className="tag-row">
-                  {project.stack.map((tag) => <span key={tag}>{tag}</span>)}
-                </div>
+
+              <a
+                className="more-projects"
+                href="https://github.com/zarinroushan?tab=repositories"
+                target="_blank"
+                rel="noreferrer"
+              >
+                EXPLORE MORE PROJECTS <span>↗</span>
+              </a>
+            </div>
+          </section>
+
+          {/* ABOUT */}
+          <section id="about" className="content-section">
+            <div className="section-inner narrow-inner">
+              <p className="section-label">02 / THE PERSON BEHIND THE SCREEN</p>
+              <h2>
+                A little about me<span>.</span>
+              </h2>
+
+              <div className="about-content">
+                <p>
+                  I&apos;m Zarin, a Computer Science and Engineering student
+                  specialising in Data Science. I&apos;m interested in the
+                  intersection of technology, creativity and design.
+                </p>
+
+                <p>
+                  I enjoy building interactive websites, experimenting with
+                  AI, exploring new tools and turning ideas into things people
+                  can actually use.
+                </p>
+
+                <p>
+                  I&apos;m still learning, still experimenting, and always looking
+                  for something interesting to build next.
+                </p>
               </div>
-            </motion.a>
-          ))}
-        </div>
-        <a className="text-link" href="https://github.com/zarinroushan" target="_blank" rel="noreferrer">
-          MORE ON GITHUB <ArrowUpRight size={15} />
-        </a>
-      </section>
+            </div>
+          </section>
 
-      <section className="about-section section-shell" id="about">
-        <div className="about-label">
-          <p className="eyebrow">A LITTLE ABOUT ME</p>
-          <span className="about-ascii" aria-hidden="true">{`  .----.\n / .--. \\\n| |    | |\n| |____| |\n \\______/\n   /  \\\n  /____\\`}</span>
-        </div>
-        <div className="about-copy">
-          <h2>Part builder.<br />Part <span className="serif-word">daydreamer.</span></h2>
-          <p>
-            I’m studying Computer Science & Engineering (Data Science) at Heritage
-            Institute of Technology. I’m drawn to the space where technology meets
-            design — where a product can be technically thoughtful and genuinely
-            delightful to use.
-          </p>
-          <p>
-            Lately, I’ve been exploring full-stack development, AI-powered ideas,
-            data projects, and interactive digital experiences. I like learning by
-            making things, then making them a little better.
-          </p>
-          <div className="interest-list">
-            <span>UI / INTERACTION</span><span>CREATIVE TECH</span><span>AI & DATA</span><span>FULL-STACK</span>
+          {/* JOURNEY */}
+          <section id="journey" className="content-section">
+            <div className="section-inner narrow-inner">
+              <p className="section-label">03 / THE ROAD SO FAR</p>
+              <h2>
+                My journey<span>.</span>
+              </h2>
+
+              <div className="timeline">
+                <article className="timeline-item">
+                  <span>2024 — PRESENT</span>
+                  <h3>Computer Science & Engineering</h3>
+                  <p>
+                    Studying Computer Science and Engineering with a
+                    specialisation in Data Science.
+                  </p>
+                </article>
+
+                <article className="timeline-item">
+                  <span>BUILDING & EXPERIMENTING</span>
+                  <h3>Projects and hackathons</h3>
+                  <p>
+                    Learning by building projects, participating in
+                    hackathons and trying technologies that are new to me.
+                  </p>
+                </article>
+
+                <article className="timeline-item">
+                  <span>WHAT&apos;S NEXT</span>
+                  <h3>Research, robotics and intelligent systems</h3>
+                  <p>
+                    Exploring AI, robotics and research opportunities while
+                    preparing for the next stage of my academic journey.
+                  </p>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          {/* LEARNING */}
+          <section id="learning" className="content-section">
+            <div className="section-inner">
+              <p className="section-label">04 / CURRENTLY EXPLORING</p>
+              <h2>
+                What I&apos;m learning<span>.</span>
+              </h2>
+
+              <div className="learning-grid">
+                <article className="learning-card">
+                  <span className="learning-status">
+                    <span aria-hidden="true">●</span> IN PROGRESS
+                  </span>
+                  <h3>Machine Learning</h3>
+                  <p>
+                    Exploring how models learn from data and how to apply them
+                    to practical problems.
+                  </p>
+                </article>
+
+                <article className="learning-card">
+                  <span className="learning-status">
+                    <span aria-hidden="true">●</span> IN PROGRESS
+                  </span>
+                  <h3>Full-Stack Development</h3>
+                  <p>
+                    Exploring how frontend interfaces, backend logic and data
+                    work together in useful digital products.
+                  </p>
+                </article>
+              </div>
+
+              <p className="learning-note">
+                These are current learning areas — a work in progress, not a
+                list of finished expertise.
+              </p>
+            </div>
+          </section>
+
+          {/* CONTACT */}
+          <section id="contact" className="content-section contact-section">
+            <div className="section-inner narrow-inner">
+              <p className="section-label">05 / SAY HELLO</p>
+              <h2>
+                Let&apos;s make something interesting<span>.</span>
+              </h2>
+
+              <p className="contact-intro">
+                Have an idea, an interesting project or just want to connect?
+                Find me around the internet.
+              </p>
+
+              <div className="contact-links">
+                <a
+                  href="https://www.linkedin.com/in/zarin-roushan-102539274/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  LINKEDIN <span>↗</span>
+                </a>
+
+                <a href="mailto:z.roushan02@gmail.com">
+                  GMAIL <span>↗</span>
+                </a>
+
+                <a
+                  href="https://github.com/zarinroushan"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  GITHUB <span>↗</span>
+                </a>
+              </div>
+
+            </div>
+          </section>
+
+          {/* PREVIOUS / NEXT CONTROLS */}
+          <div className="nav-dock">
+            <nav className="section-controls" aria-label="Section navigation">
+              <button
+                onClick={() => goToSection(activeSection - 1)}
+                disabled={activeSection === 0}
+              >
+                ← PREVIOUS
+              </button>
+
+              <span aria-live="polite">
+                {String(activeSection + 1).padStart(2, "0")} /{" "}
+                {String(sections.length).padStart(2, "0")}
+              </span>
+
+              <button
+                onClick={() => goToSection(activeSection + 1)}
+                disabled={activeSection === sections.length - 1}
+              >
+                NEXT →
+              </button>
+            </nav>
           </div>
-        </div>
-      </section>
 
-      <section className="contact-section section-shell" id="contact">
-        <p className="eyebrow">HAVE A GOOD IDEA?</p>
-        <h2>Let’s make<br /><span className="serif-word">something</span> real.</h2>
-        <a className="contact-cta" href="mailto:">
-          SAY HELLO <ArrowUpRight size={18} />
-        </a>
-        <div className="contact-bottom">
-          <span>OPEN TO INTERESTING COLLABORATIONS</span>
-          <div className="social-links">
-            <a href="https://github.com/zarinroushan" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={18} /></a>
-            <a href="https://www.linkedin.com/in/zarinroushan/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={18} /></a>
-            <a href="mailto:" aria-label="Email"><Mail size={18} /></a>
-          </div>
-          <span>MADE WITH CURIOSITY © 2026</span>
-        </div>
-      </section>
+          <footer className="site-footer">
+            <div className="footer-brand">
+              <strong>
+                zarin<span>.world</span>
+              </strong>
+              <span>© 2026 Zarin Roushan</span>
+            </div>
 
-      <button className="terminal-fab" onClick={() => setTerminalOpen(true)} aria-label="Open keyboard shortcuts">
-        <span>⌘</span> ?
-      </button>
-
-      {terminalOpen && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setTerminalOpen(false)}>
-          <motion.div
-            className="shortcuts-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shortcuts-title"
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="modal-top"><span>zarin.exe — KEYBOARD MAP</span><button onClick={() => setTerminalOpen(false)}>ESC ✕</button></div>
-            <h2 id="shortcuts-title">Take the <span className="serif-word">shortcuts.</span></h2>
-            <div className="shortcut-row"><kbd>H</kbd><span>Go home</span><kbd>W</kbd><span>See selected work</span></div>
-            <div className="shortcut-row"><kbd>A</kbd><span>Get to know me</span><kbd>C</kbd><span>Say hello</span></div>
-            <div className="shortcut-row"><kbd>ESC</kbd><span>Close this window</span><kbd>?</kbd><span>Toggle this panel</span></div>
-            <p className="modal-foot">A small interface. A few secret doors. Have fun exploring.</p>
-          </motion.div>
-        </div>
+            <div className="footer-message">
+              <strong>
+                BUILT WITH CURIOSITY <span className="footer-star">✦</span>
+              </strong>
+            </div>
+          </footer>
+        </>
       )}
     </main>
   );
