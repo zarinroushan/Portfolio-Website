@@ -182,7 +182,7 @@ export default function Home() {
         <div className="hero-sticker" aria-label="Curiosity is a feature">
           <span className="sticker-star">✳</span>
           <span>CURIOUS BY<br />DEFAULT</span>
-          <span className="sticker-small">EST. 2003-ish</span>
+          <span className="sticker-small">MADE OF CURIOSITY</span>
         </div>
 
         <div className="hero-footer">
@@ -265,7 +265,7 @@ export default function Home() {
       <section className="contact-section section-shell" id="contact">
         <p className="eyebrow">HAVE A GOOD IDEA?</p>
         <h2>Let’s make<br /><span className="serif-word">something</span> real.</h2>
-        <a className="contact-cta" href="mailto:hello@zarin.world">
+        <a className="contact-cta" href="mailto:">
           SAY HELLO <ArrowUpRight size={18} />
         </a>
         <div className="contact-bottom">
@@ -273,7 +273,7 @@ export default function Home() {
           <div className="social-links">
             <a href="https://github.com/zarinroushan" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={18} /></a>
             <a href="https://www.linkedin.com/in/zarinroushan/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={18} /></a>
-            <a href="mailto:hello@zarin.world" aria-label="Email"><Mail size={18} /></a>
+            <a href="mailto:" aria-label="Email"><Mail size={18} /></a>
           </div>
           <span>MADE WITH CURIOSITY © 2026</span>
         </div>
